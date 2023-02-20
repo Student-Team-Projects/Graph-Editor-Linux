@@ -1,0 +1,116 @@
+buildscript {
+    ext {
+        osPackageVersion = "6.1.1"
+    }
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath("com.netflix.nebula:gradle-ospackage-plugin:${osPackageVersion}")
+    }
+}
+plugins {
+    id "nebula.ospackage" version "9.1.1"
+    id 'org.springframework.boot' version '3.0.2'
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
+}
+
+
+
+bootJar {
+    launchScript()
+}
+
+
+apply plugin: 'org.springframework.boot'
+apply plugin: "nebula.ospackage"
+
+
+def service = rootProject.name
+
+apply plugin: "nebula.ospackage"
+apply plugin : "java" 
+ext {
+   javaMainClass = "src/main/java/graph_editor/application/MainMenu.java"
+}
+
+jar {
+    manifest{
+        attributes 'Main-Class': 'src/main/java/graph_editor/application/MainMenu.java'
+    }
+}
+
+application {
+    mainClassName = javaMainClass
+}
+
+group 'io'
+version '1'
+
+sourceCompatibility = 17
+
+repositories {
+    mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+}
+
+sourceSets {
+  main {
+    resources {
+      srcDirs "src/main/resource", "src/main/application"
+    }
+  }
+}
+
+javafx {
+    version = "18"
+    modules = [ 'javafx.controls', 'javafx.fxml']
+}
+
+dependencies {
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.+'
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.+'
+    testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.+'
+    testImplementation group: 'org.mockito', name: 'mockito-inline', version: '3.+'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'linalg.algorithms.GramSchmidt'
+    }
+}
+
+ospackage {
+    packageName = "grapheditor"
+
+    // Uses the main project version
+    version = "0.0.1"
+
+    os = LINUX
+    type = BINARY
+
+    // Sets our working directory and permissions, basically
+    into "/opt/local/daemon-demo"
+
+    // Copy the actual .jar file
+    from("build/libs/java-1.jar") {
+        // Strip the version from the jar filename
+        rename { String fileName ->
+            fileName.replace("-${project.version}", "")
+        }
+        fileMode 0500
+        into "bin"
+    }
+
+    // Copy the config files
+    from("install/conf") {
+        fileType CONFIG | NOREPLACE
+        fileMode 0754
+        into "conf"
+    }
+}
